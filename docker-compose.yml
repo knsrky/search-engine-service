@@ -1,0 +1,72 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:18.1-alpine
+    container_name: search-engine-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: search_engine
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U app -d search_engine" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Mock Provider A (JSON)
+  mock_provider_a:
+    build: ./mock/provider_a
+    container_name: mock-provider-a
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8081/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Mock Provider B (XML)
+  mock_provider_b:
+    build: ./mock/provider_b
+    container_name: mock-provider-b
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8082/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Main API Service
+  api:
+    build: .
+    container_name: search-engine-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mock_provider_a:
+        condition: service_healthy
+      mock_provider_b:
+        condition: service_healthy
+    environment:
+      APP_APP_ENV: development
+      APP_APP_PORT: 8080
+      APP_DATABASE_HOST: postgres
+      APP_DATABASE_PORT: 5432
+      APP_DATABASE_NAME: search_engine
+      APP_DATABASE_USER: app
+      APP_DATABASE_PASSWORD: secret
+      APP_PROVIDER_A_BASE_URL: http://mock_provider_a:8081
+      APP_PROVIDER_A_ENDPOINT: /api/contents
+      APP_PROVIDER_B_BASE_URL: http://mock_provider_b:8082
+      APP_PROVIDER_B_ENDPOINT: /feed
+      APP_SYNC_INTERVAL: 5m
+
+volumes:
+  postgres_data:

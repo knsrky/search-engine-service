@@ -1,0 +1,43 @@
+# User specific: Ignore all directories starting with .
+.*/
+!.git/
+
+# User specific: Ignore main binary
+main
+
+# User specific: Ignore CLAUDE.md everywhere
+CLAUDE.md
+
+# --- Go Standard Ignores ---
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Local configuration
+.env
+config/config.yaml
+
+# Logs
+*.log
+logs/
+
+# OS Specific
+.DS_Store
+Thumbs.db

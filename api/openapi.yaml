@@ -1,0 +1,344 @@
+openapi: 3.1.0
+info:
+  title: Search Engine Service API
+  version: 1.0.0
+  description: |
+    Content aggregation and search API that fetches content from multiple providers,
+    normalizes data, calculates relevance scores, and provides unified search.
+  contact:
+    name: API Support
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+tags:
+  - name: contents
+    description: Content search and retrieval
+  - name: admin
+    description: Administrative operations
+  - name: health
+    description: Health check endpoints
+
+paths:
+  /livez:
+    get:
+      summary: Liveness probe
+      description: Returns 200 if the application is running
+      tags: [health]
+      responses:
+        '200':
+          description: Application is alive
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK
+
+  /readyz:
+    get:
+      summary: Readiness probe
+      description: Returns 200 if the application is ready to serve traffic (DB connected)
+      tags: [health]
+      responses:
+        '200':
+          description: Application is ready
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK
+        '503':
+          description: Application is not ready (DB disconnected)
+
+  /api/v1/contents:
+    get:
+      summary: Search contents
+      description: Search for content across all providers with filtering and sorting
+      tags: [contents]
+      parameters:
+        - name: q
+          in: query
+          description: Search query string
+          schema:
+            type: string
+            maxLength: 200
+          example: golang tutorial
+        - name: type
+          in: query
+          description: Filter by content type
+          schema:
+            type: string
+            enum: [video, article]
+        - name: provider
+          in: query
+          description: Filter by provider ID
+          schema:
+            type: string
+            enum: [provider_a, provider_b]
+        - name: sort_by
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+            enum: [relevance, score, published_at]
+            default: relevance
+        - name: sort_order
+          in: query
+          description: Sort direction
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 5
+      responses:
+        '200':
+          description: Successful search
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/contents/{id}:
+    get:
+      summary: Get content by ID
+      description: Retrieve a single content item by its unique identifier
+      tags: [contents]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Content UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Content found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentResponse'
+        '404':
+          description: Content not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/admin/sync:
+    post:
+      summary: Trigger sync from all providers
+      description: Manually trigger content synchronization from all registered providers
+      tags: [admin]
+      responses:
+        '200':
+          description: Sync completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+
+  /api/v1/admin/sync/{provider}:
+    post:
+      summary: Trigger sync from specific provider
+      description: Manually trigger content synchronization from a single provider
+      tags: [admin]
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          description: Provider name
+          schema:
+            type: string
+            enum: [provider_a, provider_b]
+      responses:
+        '200':
+          description: Sync completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResultResponse'
+        '404':
+          description: Provider not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/admin/providers:
+    get:
+      summary: List registered providers
+      description: Get list of all registered content providers
+      tags: [admin]
+      responses:
+        '200':
+          description: List of providers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  providers:
+                    type: array
+                    items:
+                      type: string
+                example:
+                  providers: [provider_a, provider_b]
+
+components:
+  schemas:
+    ContentResponse:
+      type: object
+      required: [id, provider_id, external_id, title, type, score, published_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Internal unique identifier
+        provider_id:
+          type: string
+          description: Source provider identifier
+        external_id:
+          type: string
+          description: ID in the source provider
+        title:
+          type: string
+          description: Content title
+        type:
+          type: string
+          enum: [video, article]
+        url:
+          type: string
+          format: uri
+        thumbnail_url:
+          type: string
+          format: uri
+        views:
+          type: integer
+          minimum: 0
+        likes:
+          type: integer
+          minimum: 0
+        duration:
+          type: string
+          description: Duration for video content (e.g., "5m30s")
+        reading_time:
+          type: integer
+          description: Reading time in minutes for articles
+        reactions:
+          type: integer
+          minimum: 0
+        score:
+          type: number
+          format: double
+          description: Calculated relevance score
+        tags:
+          type: array
+          items:
+            type: string
+        published_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SearchResponse:
+      type: object
+      required: [contents, pagination]
+      properties:
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentResponse'
+        pagination:
+          $ref: '#/components/schemas/PaginationResponse'
+
+    PaginationResponse:
+      type: object
+      required: [page, page_size, total, total_pages]
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+          description: Total number of matching items
+        total_pages:
+          type: integer
+          minimum: 0
+
+    SyncResponse:
+      type: object
+      required: [results, total_synced, total_errors]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncResultResponse'
+        total_synced:
+          type: integer
+          minimum: 0
+        total_errors:
+          type: integer
+          minimum: 0
+
+    SyncResultResponse:
+      type: object
+      required: [provider, count, duration]
+      properties:
+        provider:
+          type: string
+        count:
+          type: integer
+          minimum: 0
+        duration:
+          type: string
+          description: Sync duration (e.g., "1.5s")
+        error:
+          type: string
+          description: Error message if sync failed
+
+    ErrorResponse:
+      type: object
+      required: [error, code]
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+        details:
+          description: Additional error details

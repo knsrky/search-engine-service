@@ -1,0 +1,59 @@
+version: "2"
+
+run:
+  concurrency: 4
+  timeout: 5m
+  go: 1.25
+  tests: true
+
+linters:
+  settings:
+    lll:
+      line-length: 180
+    govet:
+      enable:
+        - buildtag
+    gocyclo:
+      min-complexity: 30
+    misspell:
+      locale: US
+
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gosec
+    - bodyclose
+    - goconst
+    - gocyclo
+    - goprintffuncname
+    - lll
+    - misspell
+    - nakedret
+    - nlreturn
+    - whitespace
+    - revive
+
+  exclusions:
+    presets:
+      - comments
+      - common-false-positives
+    rules:
+      - linters:
+          - gosec
+        text: G115
+      - linters:
+          - staticcheck
+        text: ST1005
+      - linters:
+          - revive
+        text: "don't use an underscore in package name"
+      - linters:
+          - revive
+        text: "avoid meaningless package name"
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

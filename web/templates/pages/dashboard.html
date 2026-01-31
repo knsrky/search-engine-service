@@ -1,0 +1,131 @@
+<div id="app" class="dashboard">
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="header-content">
+            <h1>🔍 Search Engine Dashboard</h1>
+            <div class="header-actions">
+                <button @click="syncProviders" :disabled="syncing" class="sync-btn">
+                    <span v-if="syncing">⏳ Syncing...</span>
+                    <span v-else>🔄 Sync Providers</span>
+                </button>
+                <div class="stat-card">
+                    <span class="stat-value">{{.ContentCount}}</span>
+                    <span class="stat-label">Total Contents</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Controls -->
+    <section class="controls">
+        <div class="search-box">
+            <input type="text" v-model="query" @input="debouncedFetch" placeholder="Search contents..."
+                class="search-input">
+            <span class="search-icon">🔎</span>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="type-filter">Type:</label>
+                <select id="type-filter" v-model="typeFilter" class="filter-select">
+                    <option value="all">All</option>
+                    <option value="video">Video</option>
+                    <option value="article">Article</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="sort-by">Sort by:</label>
+                <select id="sort-by" v-model="sortBy" class="filter-select">
+                    <option value="">Default</option>
+                    <option value="score">Popularity/Relevance</option>
+                    <option value="published_at">Published Date</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="sort-order">Order:</label>
+                <select id="sort-order" v-model="sortOrder" class="filter-select">
+                    <option value="desc">Descending ↓</option>
+                    <option value="asc">Ascending ↑</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading State -->
+    <div v-if="loading" class="loading">
+        <div class="spinner"></div>
+        <span>Loading...</span>
+    </div>
+
+    <!-- Content Table -->
+    <section v-else class="content-section">
+        <!-- Empty State -->
+        <div v-if="contents.length === 0" class="empty-state">
+            <span class="empty-icon">📭</span>
+            <h3>No results found</h3>
+            <p>Try adjusting your search or filters</p>
+        </div>
+
+        <!-- Table -->
+        <div v-else class="table-container">
+            <table class="content-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Provider</th>
+                        <th>Tags</th>
+                        <th>Score</th>
+                        <th>Published</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="content in contents" :key="content.id">
+                        <td class="title-cell">
+                            <span class="content-title">${ content.title }</span>
+                        </td>
+                        <td>
+                            <span :class="['type-badge', 'type-' + content.type]">
+                                ${ content.type === 'video' ? '🎬' : '📄' } ${ content.type }
+                            </span>
+                        </td>
+                        <td class="provider-cell">${ content.provider_id }</td>
+                        <td class="tags-cell">
+                            <span v-for="tag in (content.tags || []).slice(0, 3)" :key="tag" class="tag-badge">${ tag
+                                }</span>
+                            <span v-if="content.tags && content.tags.length > 3" class="tag-more">+${
+                                content.tags.length - 3 }</span>
+                        </td>
+                        <td class="score-cell">
+                            <span class="score-value">${ content.score.toFixed(1) }</span>
+                        </td>
+                        <td class="date-cell">${ formatDate(content.published_at) }</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div v-if="totalPages > 0" class="pagination">
+            <button @click="prevPage" :disabled="!hasPrevPage" class="page-btn">
+                ← Previous
+            </button>
+
+            <span class="page-info">
+                Page ${ page } of ${ totalPages }
+                <span class="total-info">(${ total } items)</span>
+            </span>
+
+            <button @click="nextPage" :disabled="!hasNextPage" class="page-btn">
+                Next →
+            </button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="dashboard-footer">
+        <p>Search Engine Service &copy; 2026</p>
+    </footer>
+</div>

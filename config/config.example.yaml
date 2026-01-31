@@ -1,0 +1,65 @@
+# Search Engine Service Configuration Template
+# Copy this file to config.yaml and fill in your values
+# Environment variables override these settings with APP_ prefix
+
+app:
+  name: search-engine-service
+  env: production  # development, staging, production
+  port: 8080
+  debug: false
+
+database:
+  host: ${DB_HOST}
+  port: 5432
+  name: ${DB_NAME}
+  user: ${DB_USER}
+  password: ${DB_PASSWORD}
+  ssl_mode: require
+  max_open_conns: 25
+  max_idle_conns: 5
+  max_lifetime: 5m
+
+provider:
+  a:
+    base_url: ${PROVIDER_A_URL}
+    endpoint: /api/contents
+    timeout: 10s
+    retry:
+      max_attempts: 3
+      wait_time: 1s
+      max_wait_time: 5s
+    circuit_breaker:
+      max_requests: 3
+      interval: 60s
+      timeout: 30s
+      failure_ratio: 0.5
+  b:
+    base_url: ${PROVIDER_B_URL}
+    endpoint: /feed
+    timeout: 10s
+    retry:
+      max_attempts: 3
+      wait_time: 1s
+      max_wait_time: 5s
+    circuit_breaker:
+      max_requests: 3
+      interval: 60s
+      timeout: 30s
+      failure_ratio: 0.5
+
+sync:
+  interval: 5m
+  on_startup: true
+  timeout: 30s
+  batch_size: 100
+
+logger:
+  level: info
+  format: json
+  output: stdout
+
+sentry:
+  enabled: true
+  dsn: ${SENTRY_DSN}
+  environment: production
+  sample_rate: 1.0
