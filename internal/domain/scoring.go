@@ -99,11 +99,13 @@ func calculateEngagementScore(c *Content) float64 {
 		if c.Views == 0 {
 			return 0
 		}
+
 		return (float64(c.Likes) / float64(c.Views)) * 10
 	case ContentTypeArticle:
 		if c.ReadingTime == 0 {
 			return 0
 		}
+
 		return (float64(c.Reactions) / float64(c.ReadingTime)) * 5
 	default:
 		return 0

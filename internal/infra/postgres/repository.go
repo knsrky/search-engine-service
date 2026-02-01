@@ -65,8 +65,10 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*domain.Content, e
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Not found
 		}
+
 		return nil, fmt.Errorf("getting content by id: %w", err)
 	}
+
 	return model.ToDomain(), nil
 }
 
@@ -80,8 +82,10 @@ func (r *Repository) GetByProviderAndExternalID(ctx context.Context, providerID,
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Not found
 		}
+
 		return nil, fmt.Errorf("getting content by provider and external id: %w", err)
 	}
+
 	return model.ToDomain(), nil
 }
 
@@ -107,6 +111,7 @@ func (r *Repository) Upsert(ctx context.Context, content *domain.Content) error 
 	content.ID = model.ID
 	content.CreatedAt = model.CreatedAt
 	content.UpdatedAt = model.UpdatedAt
+
 	return nil
 }
 
@@ -141,6 +146,7 @@ func (r *Repository) BulkUpsert(ctx context.Context, contents []*domain.Content)
 		contents[i].CreatedAt = m.CreatedAt
 		contents[i].UpdatedAt = m.UpdatedAt
 	}
+
 	return nil
 }
 
@@ -150,6 +156,7 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 	if result.Error != nil {
 		return fmt.Errorf("deleting content: %w", result.Error)
 	}
+
 	return nil
 }
 
@@ -160,6 +167,7 @@ func (r *Repository) Count(ctx context.Context, params domain.SearchParams) (int
 	if err := query.WithContext(ctx).Model(&ContentModel{}).Count(&count).Error; err != nil {
 		return 0, fmt.Errorf("counting contents: %w", err)
 	}
+
 	return count, nil
 }
 
@@ -219,6 +227,7 @@ func (r *Repository) applyOrdering(query *gorm.DB, params domain.SearchParams) *
 				"(ts_rank(search_vector, websearch_to_tsquery('english', ?)) * LOG(COALESCE(score, 0) + 10)) "+direction,
 				params.Query,
 			)
+
 			return query.Clauses(clause.OrderBy{Expression: expr})
 		}
 		// Fallback to score when no query provided

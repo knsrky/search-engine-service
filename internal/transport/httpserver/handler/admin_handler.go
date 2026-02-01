@@ -5,7 +5,7 @@ import (
 	"go.uber.org/zap"
 
 	"search-engine-service/internal/app/service"
-	"search-engine-service/internal/transport/http/dto"
+	"search-engine-service/internal/transport/httpserver/dto"
 	"search-engine-service/internal/validator"
 )
 
@@ -71,6 +71,7 @@ func (h *AdminHandler) SyncProvider(c *fiber.Ctx) error {
 // GetProviders handles GET /api/v1/admin/providers
 func (h *AdminHandler) GetProviders(c *fiber.Ctx) error {
 	providers := h.syncService.GetProviderNames()
+
 	return c.JSON(fiber.Map{
 		"providers": providers,
 	})

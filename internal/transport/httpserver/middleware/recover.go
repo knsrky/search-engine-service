@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 
-	"search-engine-service/internal/transport/http/dto"
+	"search-engine-service/internal/transport/httpserver/dto"
 )
 
 // Recover returns a middleware that recovers from panics.

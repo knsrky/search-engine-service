@@ -63,3 +63,22 @@ sentry:
   dsn: ${SENTRY_DSN}
   environment: production
   sample_rate: 1.0
+
+redis:
+  host: ${REDIS_HOST:localhost}
+  port: 6379
+  password: ${REDIS_PASSWORD}
+  db: 0
+
+cache:
+  # Enable caching for search results to improve performance
+  # Disabled by default - enable in production after testing
+  enabled: false
+
+  # How long search results stay in cache before expiring
+  # Trade-off: Longer TTL = better performance, shorter TTL = fresher data
+  # Recommended: 15m for frequently changing data, 1h for stable data
+  search_ttl: 15m
+
+  # Redis key prefix to avoid collisions with other applications
+  key_prefix: search-engine

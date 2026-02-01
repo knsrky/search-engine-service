@@ -12,23 +12,14 @@ import (
 	"search-engine-service/pkg/locker"
 )
 
-// CacheInvalidator handles cache invalidation after successful sync.
-// This interface will be implemented when search result caching is added.
-type CacheInvalidator interface {
-	// InvalidateSearchCache invalidates all cached search results.
-	// Called after successful sync to ensure users see fresh data.
-	InvalidateSearchCache(ctx context.Context) error
-}
-
 // SyncScheduler runs periodic content synchronization with distributed locking
 // to ensure only one instance executes sync jobs at a time.
 type SyncScheduler struct {
-	syncService      *service.SyncService
-	interval         time.Duration
-	timeout          time.Duration
-	logger           *zap.Logger
-	locker           locker.DistributedLocker
-	cacheInvalidator CacheInvalidator // optional, can be nil
+	syncService *service.SyncService
+	interval    time.Duration
+	timeout     time.Duration
+	logger      *zap.Logger
+	locker      locker.DistributedLocker
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -49,21 +40,18 @@ type SyncConfig struct {
 //   - cfg: Sync configuration including interval and timeout
 //   - logger: Structured logger for operational visibility
 //   - locker: Distributed locker for cross-instance coordination
-//   - cacheInvalidator: Optional cache invalidator (can be nil)
 func NewSyncScheduler(
 	syncSvc *service.SyncService,
 	cfg SyncConfig,
 	logger *zap.Logger,
 	locker locker.DistributedLocker,
-	cacheInvalidator CacheInvalidator,
 ) *SyncScheduler {
 	return &SyncScheduler{
-		syncService:      syncSvc,
-		interval:         cfg.Interval,
-		timeout:          cfg.Timeout,
-		logger:           logger,
-		locker:           locker,
-		cacheInvalidator: cacheInvalidator,
+		syncService: syncSvc,
+		interval:    cfg.Interval,
+		timeout:     cfg.Timeout,
+		logger:      logger,
+		locker:      locker,
 	}
 }
 
@@ -116,11 +104,6 @@ func (s *SyncScheduler) run(runOnStartup bool) {
 //   - Lock TTL = interval duration (cooldown model, not timeout)
 //   - Success: Lock held for full interval to prevent duplicate syncs
 //   - Failure: Lock released immediately to allow retry by another instance
-//
-// Cache invalidation:
-//   - Only happens after successful sync
-//   - Executed while holding the lock (before cooldown begins)
-//   - Failures logged but don't prevent lock cooldown
 func (s *SyncScheduler) executeSync() {
 	const lockKey = "sync:scheduler:lock"
 
@@ -128,10 +111,12 @@ func (s *SyncScheduler) executeSync() {
 	acquired, err := s.locker.Acquire(s.ctx, lockKey, s.interval)
 	if err != nil {
 		s.logger.Error("failed to acquire distributed lock", zap.Error(err))
+
 		return
 	}
 	if !acquired {
 		s.logger.Debug("another instance is running sync, skipping execution")
+
 		return
 	}
 
@@ -170,17 +155,6 @@ func (s *SyncScheduler) executeSync() {
 			zap.Int("providers_failed", totalErrors),
 		)
 	} else {
-		// Success path: invalidate cache before lock enters cooldown
-		if s.cacheInvalidator != nil {
-			if err := s.cacheInvalidator.InvalidateSearchCache(s.ctx); err != nil {
-				s.logger.Error("failed to invalidate cache", zap.Error(err))
-				// Note: Cache invalidation failure doesn't trigger lock release
-				// Lock still held to prevent duplicate syncs (stale cache > duplicate work)
-			} else {
-				s.logger.Debug("search cache invalidated successfully")
-			}
-		}
-
 		// Lock will expire naturally after interval (cooldown period)
 		s.logger.Info("sync completed successfully, lock held for cooldown",
 			zap.Int("total_synced", totalSynced),

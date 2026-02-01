@@ -18,13 +18,13 @@ func NewHealthCheck(db *gorm.DB) fiber.Handler {
 	return healthcheck.New(healthcheck.Config{
 		// Liveness probe - is the application running?
 		LivenessEndpoint: "/livez",
-		LivenessProbe: func(c *fiber.Ctx) bool {
+		LivenessProbe: func(_ *fiber.Ctx) bool {
 			return true // Always return true if the app is running
 		},
 
 		// Readiness probe - is the application ready to serve traffic?
 		ReadinessEndpoint: "/readyz",
-		ReadinessProbe: func(c *fiber.Ctx) bool {
+		ReadinessProbe: func(_ *fiber.Ctx) bool {
 			if db == nil {
 				return false
 			}
@@ -32,6 +32,7 @@ func NewHealthCheck(db *gorm.DB) fiber.Handler {
 			if err != nil {
 				return false
 			}
+
 			return sqlDB.Ping() == nil
 		},
 	})

@@ -91,6 +91,7 @@ func (s *SyncService) syncProvider(ctx context.Context, provider domain.Provider
 			zap.String("provider", provider.Name()),
 			zap.Error(err),
 		)
+
 		return result
 	}
 
@@ -103,6 +104,7 @@ func (s *SyncService) syncProvider(ctx context.Context, provider domain.Provider
 				zap.String("provider", provider.Name()),
 				zap.Error(err),
 			)
+
 			return result
 		}
 	}
@@ -124,9 +126,11 @@ func (s *SyncService) SyncProvider(ctx context.Context, providerName string) (*S
 	for _, p := range s.providers {
 		if p.Name() == providerName {
 			result := s.syncProvider(ctx, p)
+
 			return &result, result.Error
 		}
 	}
+
 	return nil, nil // Provider not found
 }
 
@@ -136,5 +140,6 @@ func (s *SyncService) GetProviderNames() []string {
 	for i, p := range s.providers {
 		names[i] = p.Name()
 	}
+
 	return names
 }

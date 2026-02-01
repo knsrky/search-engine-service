@@ -1,5 +1,5 @@
-// Package http provides HTTP server and routing.
-package http
+// Package httpserver provides HTTP server and routing.
+package httpserver
 
 import (
 	"fmt"
@@ -12,9 +12,8 @@ import (
 	"gorm.io/gorm"
 
 	"search-engine-service/internal/app/service"
-	"search-engine-service/internal/infra/postgres"
-	"search-engine-service/internal/transport/http/handler"
-	"search-engine-service/internal/transport/http/middleware"
+	"search-engine-service/internal/transport/httpserver/handler"
+	"search-engine-service/internal/transport/httpserver/middleware"
 	"search-engine-service/internal/validator"
 )
 
@@ -36,7 +35,6 @@ func NewServer(
 	cfg ServerConfig,
 	searchSvc *service.SearchService,
 	syncSvc *service.SyncService,
-	repo *postgres.Repository,
 	db *gorm.DB,
 	v *validator.Validator,
 	logger *zap.Logger,
@@ -138,11 +136,13 @@ func errorHandler(logger *zap.Logger) fiber.ErrorHandler {
 // Start starts the HTTP server.
 func (s *Server) Start(port int) error {
 	s.Logger.Info("starting HTTP server", zap.Int("port", port))
+
 	return s.App.Listen(fmt.Sprintf(":%d", port))
 }
 
 // Shutdown gracefully shuts down the server.
 func (s *Server) Shutdown() error {
 	s.Logger.Info("shutting down HTTP server")
+
 	return s.App.Shutdown()
 }

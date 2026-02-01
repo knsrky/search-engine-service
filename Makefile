@@ -74,7 +74,7 @@ coverage-func:
 
 ## lint: Run golangci-lint
 lint:
-	golangci-lint run -v
+	golangci-lint run
 
 ## fmt: Format code
 fmt:

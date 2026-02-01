@@ -74,6 +74,7 @@ func (r *RedisLocker) Acquire(ctx context.Context, key string, ttl time.Duration
 			r.logger.Debug("lock already held by another instance",
 				zap.String("key", key),
 			)
+
 			return false, nil
 		}
 		// Real errors (Redis connection issues, context cancellation, etc.)
@@ -111,6 +112,7 @@ func (r *RedisLocker) Release(ctx context.Context, key string) error {
 		r.logger.Debug("no mutex found for key, lock not owned by this instance",
 			zap.String("key", key),
 		)
+
 		return nil
 	}
 

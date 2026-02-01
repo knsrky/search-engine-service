@@ -20,9 +20,10 @@ import (
 	"search-engine-service/internal/infra/provider"
 	"search-engine-service/internal/infra/provider/provider_a"
 	"search-engine-service/internal/infra/provider/provider_b"
+	rediscache "search-engine-service/internal/infra/redis"
 	"search-engine-service/internal/job"
 	"search-engine-service/internal/logger"
-	httpserver "search-engine-service/internal/transport/http"
+	"search-engine-service/internal/transport/httpserver"
 	"search-engine-service/internal/validator"
 	"search-engine-service/pkg/locker"
 )
@@ -51,7 +52,7 @@ func main() {
 	if err != nil {
 		panic("failed to initialize logger: " + err.Error())
 	}
-	defer log.Sync()
+	defer func() { _ = log.Sync() }()
 
 	log.Info("starting search-engine-service",
 		zap.String("env", cfg.App.Env),
@@ -76,7 +77,7 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to connect to database", zap.Error(err))
 	}
-	defer postgres.Close(db)
+	defer func() { _ = postgres.Close(db) }()
 
 	// Run migrations
 	if err := migrations.Run(db); err != nil {
@@ -131,10 +132,6 @@ func main() {
 	// Create domain providers slice
 	domainProviders := []domain.Provider{providerA, providerB}
 
-	// Create services
-	searchSvc := service.NewSearchService(repo, log.Logger)
-	syncSvc := service.NewSyncService(repo, domainProviders, log.Logger)
-
 	// Connect to Redis
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
@@ -147,11 +144,27 @@ func main() {
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		log.Fatal("failed to connect to Redis", zap.Error(err))
 	}
-	defer redisClient.Close()
+	defer func() { _ = redisClient.Close() }()
 	log.Info("connected to Redis",
 		zap.String("host", cfg.Redis.Host),
 		zap.Int("port", cfg.Redis.Port),
 	)
+
+	// Create cache implementation (optional, based on config)
+	var cache domain.Cache
+	if cfg.Cache.Enabled {
+		cache = rediscache.NewCache(redisClient, log.Logger, cfg.Cache.KeyPrefix)
+		log.Info("cache enabled",
+			zap.Duration("search_ttl", cfg.Cache.SearchTTL),
+			zap.String("key_prefix", cfg.Cache.KeyPrefix),
+		)
+	} else {
+		log.Info("cache disabled")
+	}
+
+	// Create services
+	searchSvc := service.NewSearchService(repo, cache, cfg.Cache.SearchTTL, log.Logger)
+	syncSvc := service.NewSyncService(repo, domainProviders, log.Logger)
 
 	// Create distributed locker
 	distLocker := locker.NewRedisLocker(redisClient, log.Logger)
@@ -168,7 +181,6 @@ func main() {
 		},
 		searchSvc,
 		syncSvc,
-		repo,
 		db,
 		v,
 		log.Logger,
@@ -184,7 +196,6 @@ func main() {
 		},
 		log.Logger,
 		distLocker,
-		nil, // cacheInvalidator will be added when caching is implemented
 	)
 	scheduler.Start(cfg.Sync.OnStartup)
 

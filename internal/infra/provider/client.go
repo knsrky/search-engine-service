@@ -45,6 +45,7 @@ func NewRestyClient(cfg ClientConfig) *resty.Client {
 			if err != nil {
 				return true
 			}
+
 			return r.StatusCode() >= 500
 		})
 
@@ -60,10 +61,11 @@ func NewCircuitBreaker[T any](name string, cfg CBConfig) *gobreaker.CircuitBreak
 		Timeout:     cfg.Timeout,
 		ReadyToTrip: func(counts gobreaker.Counts) bool {
 			failureRatio := float64(counts.TotalFailures) / float64(counts.Requests)
+
 			return counts.Requests >= 3 && failureRatio >= cfg.FailureRatio
 		},
-		OnStateChange: func(name string, from gobreaker.State, to gobreaker.State) {
-			// Log state changes - logger injected at higher level
+		OnStateChange: func(_ string, _ gobreaker.State, _ gobreaker.State) {
+			// Log state changes - logger injected at higher level #todo
 		},
 	}
 

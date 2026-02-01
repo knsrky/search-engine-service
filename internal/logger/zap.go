@@ -85,7 +85,7 @@ func New(cfg Config, sentryCfg SentryConfig) (*Logger, error) {
 	case "stderr":
 		output = zapcore.AddSync(os.Stderr)
 	default:
-		file, err := os.OpenFile(cfg.Output, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		file, err := os.OpenFile(cfg.Output, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 		if err != nil {
 			return nil, err
 		}
@@ -112,6 +112,7 @@ func (l *Logger) Sync() error {
 	if l.sentryEnabled {
 		sentry.Flush(2 * time.Second)
 	}
+
 	return l.Logger.Sync()
 }
 
@@ -148,6 +149,7 @@ func (c *sentryCore) Check(entry zapcore.Entry, checked *zapcore.CheckedEntry) *
 	if entry.Level >= zapcore.ErrorLevel {
 		return checked.AddCore(entry, c)
 	}
+
 	return checked
 }
 
@@ -171,6 +173,7 @@ func (c *sentryCore) Write(entry zapcore.Entry, fields []zapcore.Field) error {
 
 func (c *sentryCore) Sync() error {
 	sentry.Flush(2 * time.Second)
+
 	return nil
 }
 
@@ -213,5 +216,6 @@ func fieldsToMap(fields []zapcore.Field) map[string]interface{} {
 			}
 		}
 	}
+
 	return m
 }

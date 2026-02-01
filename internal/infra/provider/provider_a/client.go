@@ -52,6 +52,7 @@ func (c *Client) Fetch(ctx context.Context) ([]*domain.Content, error) {
 		if r.IsError() {
 			return nil, fmt.Errorf("provider_a returned status %d", r.StatusCode())
 		}
+
 		return r, nil
 	})
 
@@ -60,6 +61,7 @@ func (c *Client) Fetch(ctx context.Context) ([]*domain.Content, error) {
 			zap.Error(err),
 			zap.String("state", c.cb.State().String()),
 		)
+
 		return nil, fmt.Errorf("fetching from provider_a: %w", err)
 	}
 
@@ -92,5 +94,6 @@ func (c *Client) HealthCheck(ctx context.Context) error {
 	if resp.IsError() {
 		return fmt.Errorf("health check returned status %d", resp.StatusCode())
 	}
+
 	return nil
 }

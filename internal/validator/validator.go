@@ -37,6 +37,7 @@ func (ve ValidationErrors) Error() string {
 		}
 		sb.WriteString(e.Message)
 	}
+
 	return sb.String()
 }
 
@@ -50,6 +51,7 @@ func New() *Validator {
 		if name == "-" {
 			return fld.Name
 		}
+
 		return name
 	})
 

@@ -89,5 +89,6 @@ func FromDomainSlice(contents []*domain.Content) []*ContentModel {
 	for i, c := range contents {
 		models[i] = FromDomain(c)
 	}
+
 	return models
 }

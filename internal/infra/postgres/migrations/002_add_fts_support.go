@@ -105,6 +105,7 @@ func addFTSSupport() *gormigrate.Migration {
 			_ = tx.Exec(`DROP FUNCTION IF EXISTS contents_search_vector_update()`).Error
 			_ = tx.Exec(`DROP INDEX IF EXISTS idx_contents_search_vector`).Error
 			_ = tx.Exec(`ALTER TABLE contents DROP COLUMN IF EXISTS search_vector`).Error
+
 			return nil
 		},
 	}

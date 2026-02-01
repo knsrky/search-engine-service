@@ -87,6 +87,7 @@ func Close(db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
+
 	return sqlDB.Close()
 }
 
@@ -96,5 +97,6 @@ func HealthCheck(db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
+
 	return sqlDB.Ping()
 }

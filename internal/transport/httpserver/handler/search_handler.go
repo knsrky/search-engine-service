@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 
 	"search-engine-service/internal/app/service"
-	"search-engine-service/internal/transport/http/dto"
+	"search-engine-service/internal/transport/httpserver/dto"
 	"search-engine-service/internal/validator"
 )
 
@@ -48,6 +48,7 @@ func (h *SearchHandler) Search(c *fiber.Ctx) error {
 	result, err := h.service.Search(c.Context(), params)
 	if err != nil {
 		h.logger.Error("search failed", zap.Error(err))
+
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResponse{
 			Error: "search failed",
 			Code:  "INTERNAL_ERROR",
@@ -70,6 +71,7 @@ func (h *SearchHandler) GetByID(c *fiber.Ctx) error {
 	content, err := h.service.GetByID(c.Context(), id)
 	if err != nil {
 		h.logger.Error("get by id failed", zap.String("id", id), zap.Error(err))
+
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResponse{
 			Error: "failed to get content",
 			Code:  "INTERNAL_ERROR",

@@ -19,6 +19,7 @@ type Config struct {
 	Logger   LoggerConfig   `mapstructure:"logger"`
 	Sentry   SentryConfig   `mapstructure:"sentry"`
 	Redis    RedisConfig    `mapstructure:"redis"`
+	Cache    CacheConfig    `mapstructure:"cache"`
 }
 
 // AppConfig holds application-level settings.
@@ -109,6 +110,13 @@ type RedisConfig struct {
 	Port     int    `mapstructure:"port"`
 	Password string `mapstructure:"password"`
 	DB       int    `mapstructure:"db"`
+}
+
+// CacheConfig holds caching settings.
+type CacheConfig struct {
+	Enabled   bool          `mapstructure:"enabled"`
+	SearchTTL time.Duration `mapstructure:"search_ttl"`
+	KeyPrefix string        `mapstructure:"key_prefix"`
 }
 
 // Load reads configuration from file and environment variables.
@@ -216,14 +224,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("redis.port", 6379)
 	v.SetDefault("redis.password", "")
 	v.SetDefault("redis.db", 0)
-}
 
-// IsDevelopment returns true if running in development mode.
-func (c *Config) IsDevelopment() bool {
-	return c.App.Env == "development"
-}
-
-// IsProduction returns true if running in production mode.
-func (c *Config) IsProduction() bool {
-	return c.App.Env == "production"
+	// Cache defaults
+	v.SetDefault("cache.enabled", false)
+	v.SetDefault("cache.search_ttl", "15m")
+	v.SetDefault("cache.key_prefix", "search-engine")
 }

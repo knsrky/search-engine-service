@@ -17,11 +17,13 @@ func Migrations() []*gormigrate.Migration {
 // Run executes all pending migrations.
 func Run(db *gorm.DB) error {
 	m := gormigrate.New(db, gormigrate.DefaultOptions, Migrations())
+
 	return m.Migrate()
 }
 
 // Rollback rolls back the last migration.
 func Rollback(db *gorm.DB) error {
 	m := gormigrate.New(db, gormigrate.DefaultOptions, Migrations())
+
 	return m.RollbackLast()
 }

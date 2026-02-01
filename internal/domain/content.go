@@ -47,6 +47,7 @@ type Content struct {
 // NewContent creates a new Content with generated ID and timestamps.
 func NewContent(providerID, externalID, title string, contentType ContentType) *Content {
 	now := time.Now().UTC()
+
 	return &Content{
 		ProviderID:  providerID,
 		ExternalID:  externalID,
@@ -75,6 +76,7 @@ func (c *Content) EngagementRate() float64 {
 	if !c.IsVideo() || c.Views == 0 {
 		return 0
 	}
+
 	return float64(c.Likes) / float64(c.Views)
 }
 
@@ -84,5 +86,6 @@ func (c *Content) DaysSincePublished() int {
 	if days < 0 {
 		return 0
 	}
+
 	return int(days)
 }

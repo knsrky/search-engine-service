@@ -69,11 +69,12 @@ func (i *Item) ToDomain(providerID string) *domain.Content {
 	}
 
 	// Set type-specific metrics
-	if i.Type == "video" {
+	switch i.Type {
+	case "video":
 		content.Views = i.Stats.Views
 		content.Likes = i.Stats.Likes
 		content.Duration = i.Stats.Duration
-	} else if i.Type == "article" {
+	case "article":
 		content.ReadingTime = i.Stats.ReadingTime
 		content.Reactions = i.Stats.Reactions
 		content.Comments = i.Stats.Comments
