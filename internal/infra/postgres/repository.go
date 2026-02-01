@@ -223,8 +223,9 @@ func (r *Repository) applyOrdering(query *gorm.DB, params domain.SearchParams) *
 		if params.Query != "" {
 			// Use gorm.Expr with parameterized query for SQL injection safety.
 			// This prevents injection from user input like "O'Reilly"
+			// Uses cached log_score_cached column for efficient ranking
 			expr := gorm.Expr(
-				"(ts_rank(search_vector, websearch_to_tsquery('english', ?)) * LOG(COALESCE(score, 0) + 10)) "+direction,
+				"(ts_rank(search_vector, websearch_to_tsquery('english', ?)) * log_score_cached) "+direction,
 				params.Query,
 			)
 
