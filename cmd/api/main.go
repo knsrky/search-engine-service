@@ -17,9 +17,7 @@ import (
 	"search-engine-service/internal/domain"
 	"search-engine-service/internal/infra/postgres"
 	"search-engine-service/internal/infra/postgres/migrations"
-	"search-engine-service/internal/infra/provider"
-	"search-engine-service/internal/infra/provider/provider_a"
-	"search-engine-service/internal/infra/provider/provider_b"
+	"search-engine-service/internal/infra/provider/registry"
 	rediscache "search-engine-service/internal/infra/redis"
 	"search-engine-service/internal/job"
 	"search-engine-service/internal/logger"
@@ -88,49 +86,8 @@ func main() {
 	// Create repository
 	repo := postgres.NewRepository(db)
 
-	// Create provider clients
-	providerA := provider_a.New(
-		provider.ClientConfig{
-			BaseURL:  cfg.Provider.A.BaseURL,
-			Endpoint: cfg.Provider.A.Endpoint,
-			Timeout:  cfg.Provider.A.Timeout,
-			Retry: provider.RetryConfig{
-				MaxAttempts: cfg.Provider.A.Retry.MaxAttempts,
-				WaitTime:    cfg.Provider.A.Retry.WaitTime,
-				MaxWaitTime: cfg.Provider.A.Retry.MaxWaitTime,
-			},
-			CB: provider.CBConfig{
-				MaxRequests:  cfg.Provider.A.CB.MaxRequests,
-				Interval:     cfg.Provider.A.CB.Interval,
-				Timeout:      cfg.Provider.A.CB.Timeout,
-				FailureRatio: cfg.Provider.A.CB.FailureRatio,
-			},
-		},
-		log.Logger,
-	)
-
-	providerB := provider_b.New(
-		provider.ClientConfig{
-			BaseURL:  cfg.Provider.B.BaseURL,
-			Endpoint: cfg.Provider.B.Endpoint,
-			Timeout:  cfg.Provider.B.Timeout,
-			Retry: provider.RetryConfig{
-				MaxAttempts: cfg.Provider.B.Retry.MaxAttempts,
-				WaitTime:    cfg.Provider.B.Retry.WaitTime,
-				MaxWaitTime: cfg.Provider.B.Retry.MaxWaitTime,
-			},
-			CB: provider.CBConfig{
-				MaxRequests:  cfg.Provider.B.CB.MaxRequests,
-				Interval:     cfg.Provider.B.CB.Interval,
-				Timeout:      cfg.Provider.B.CB.Timeout,
-				FailureRatio: cfg.Provider.B.CB.FailureRatio,
-			},
-		},
-		log.Logger,
-	)
-
-	// Create domain providers slice
-	domainProviders := []domain.Provider{providerA, providerB}
+	// Create provider clients using factory pattern
+	domainProviders := registry.NewProviders(cfg.Provider, log.Logger)
 
 	// Connect to Redis
 	redisClient := redis.NewClient(&redis.Options{

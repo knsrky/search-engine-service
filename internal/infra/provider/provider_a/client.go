@@ -13,23 +13,24 @@ import (
 	"search-engine-service/internal/infra/provider"
 )
 
+// Endpoint is the API path for Provider A's content endpoint.
+const Endpoint = "/api/contents"
+
 // Client implements domain.Provider for Provider A (JSON).
 type Client struct {
-	name     string
-	client   *resty.Client
-	cb       *gobreaker.CircuitBreaker[*resty.Response]
-	endpoint string
-	logger   *zap.Logger
+	name   string
+	client *resty.Client
+	cb     *gobreaker.CircuitBreaker[*resty.Response]
+	logger *zap.Logger
 }
 
 // New creates a new Provider A client.
 func New(cfg provider.ClientConfig, logger *zap.Logger) *Client {
 	return &Client{
-		name:     "provider_a",
-		client:   provider.NewRestyClient(cfg),
-		cb:       provider.NewCircuitBreaker[*resty.Response]("provider_a", cfg.CB),
-		endpoint: cfg.Endpoint,
-		logger:   logger,
+		name:   "provider_a",
+		client: provider.NewRestyClient(cfg),
+		cb:     provider.NewCircuitBreaker[*resty.Response]("provider_a", cfg.CB),
+		logger: logger,
 	}
 }
 
@@ -45,7 +46,7 @@ func (c *Client) Fetch(ctx context.Context) ([]*domain.Content, error) {
 		r, err := c.client.R().
 			SetContext(ctx).
 			SetResult(&result).
-			Get(c.endpoint)
+			Get(Endpoint)
 		if err != nil {
 			return nil, err
 		}

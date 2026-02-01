@@ -10,11 +10,10 @@ import (
 
 // ClientConfig holds configuration for a provider client.
 type ClientConfig struct {
-	BaseURL  string
-	Endpoint string
-	Timeout  time.Duration
-	Retry    RetryConfig
-	CB       CBConfig
+	BaseURL string
+	Timeout time.Duration
+	Retry   RetryConfig
+	CB      CBConfig
 }
 
 // RetryConfig holds retry configuration.

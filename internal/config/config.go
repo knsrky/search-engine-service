@@ -59,11 +59,10 @@ type ProviderConfig struct {
 
 // ProviderEndpoint holds a single provider's configuration.
 type ProviderEndpoint struct {
-	BaseURL  string        `mapstructure:"base_url"`
-	Endpoint string        `mapstructure:"endpoint"`
-	Timeout  time.Duration `mapstructure:"timeout"`
-	Retry    RetryConfig   `mapstructure:"retry"`
-	CB       CBConfig      `mapstructure:"circuit_breaker"`
+	BaseURL string        `mapstructure:"base_url"`
+	Timeout time.Duration `mapstructure:"timeout"`
+	Retry   RetryConfig   `mapstructure:"retry"`
+	CB      CBConfig      `mapstructure:"circuit_breaker"`
 }
 
 // RetryConfig holds retry settings.
@@ -180,7 +179,6 @@ func setDefaults(v *viper.Viper) {
 
 	// Provider A defaults
 	v.SetDefault("provider.a.base_url", "http://localhost:8081")
-	v.SetDefault("provider.a.endpoint", "/api/contents")
 	v.SetDefault("provider.a.timeout", "10s")
 	v.SetDefault("provider.a.retry.max_attempts", 3)
 	v.SetDefault("provider.a.retry.wait_time", "1s")
@@ -192,7 +190,6 @@ func setDefaults(v *viper.Viper) {
 
 	// Provider B defaults
 	v.SetDefault("provider.b.base_url", "http://localhost:8082")
-	v.SetDefault("provider.b.endpoint", "/feed")
 	v.SetDefault("provider.b.timeout", "10s")
 	v.SetDefault("provider.b.retry.max_attempts", 3)
 	v.SetDefault("provider.b.retry.wait_time", "1s")

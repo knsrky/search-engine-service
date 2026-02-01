@@ -79,9 +79,7 @@ services:
       APP_REDIS_HOST: redis
       APP_REDIS_PORT: 6379
       APP_PROVIDER_A_BASE_URL: http://mock_provider_a:8081
-      APP_PROVIDER_A_ENDPOINT: /api/contents
       APP_PROVIDER_B_BASE_URL: http://mock_provider_b:8082
-      APP_PROVIDER_B_ENDPOINT: /feed
       APP_SYNC_INTERVAL: 5m
 
 volumes:
