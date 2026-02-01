@@ -247,7 +247,12 @@ curl "http://localhost:8080/api/v1/admin/providers"
 **Example Response**:
 
 ```json
-{"providers":["provider_a","provider_b"]}
+{
+  "providers": [
+    "provider_a",
+    "provider_b"
+  ]
+}
 ```
 
 ---
