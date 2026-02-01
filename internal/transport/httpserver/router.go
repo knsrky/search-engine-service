@@ -111,7 +111,8 @@ func registerRoutes(
 	admin.Get("/providers", adminHandler.GetProviders)
 }
 
-// errorHandler returns a custom error handler.
+// errorHandler returns a custom error handler that logs based on HTTP status code.
+// 404s are logged at DEBUG level (expected client behavior), 4xx at WARN, 5xx at ERROR.
 func errorHandler(logger *zap.Logger) fiber.ErrorHandler {
 	return func(c *fiber.Ctx, err error) error {
 		code := fiber.StatusInternalServerError
@@ -120,11 +121,32 @@ func errorHandler(logger *zap.Logger) fiber.ErrorHandler {
 			code = e.Code
 		}
 
-		logger.Error("unhandled error",
-			zap.Error(err),
-			zap.Int("status", code),
-			zap.String("path", c.Path()),
-		)
+		// Log based on status code - 404s are common and not server errors
+		switch {
+		case code == fiber.StatusNotFound:
+			logger.Debug("resource not found",
+				zap.String("path", c.Path()),
+				zap.String("method", c.Method()),
+			)
+		case code >= 500:
+			logger.Error("server error",
+				zap.Error(err),
+				zap.Int("status", code),
+				zap.String("path", c.Path()),
+			)
+		case code >= 400:
+			logger.Warn("client error",
+				zap.Error(err),
+				zap.Int("status", code),
+				zap.String("path", c.Path()),
+			)
+		default:
+			logger.Error("unhandled error",
+				zap.Error(err),
+				zap.Int("status", code),
+				zap.String("path", c.Path()),
+			)
+		}
 
 		return c.Status(code).JSON(fiber.Map{
 			"error": err.Error(),

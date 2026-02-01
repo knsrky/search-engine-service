@@ -72,12 +72,6 @@ paths:
           schema:
             type: string
             enum: [video, article]
-        - name: provider
-          in: query
-          description: Filter by provider ID
-          schema:
-            type: string
-            enum: [provider_a, provider_b]
         - name: sort_by
           in: query
           description: Field to sort by
@@ -230,12 +224,6 @@ components:
         type:
           type: string
           enum: [video, article]
-        url:
-          type: string
-          format: uri
-        thumbnail_url:
-          type: string
-          format: uri
         views:
           type: integer
           minimum: 0
@@ -301,18 +289,25 @@ components:
 
     SyncResponse:
       type: object
-      required: [results, total_synced, total_errors]
+      required: [results, summary]
       properties:
         results:
           type: array
           items:
             $ref: '#/components/schemas/SyncResultResponse'
-        total_synced:
-          type: integer
-          minimum: 0
-        total_errors:
-          type: integer
-          minimum: 0
+        summary:
+          type: object
+          required: [total_synced, providers_ok, providers_fail]
+          properties:
+            total_synced:
+              type: integer
+              minimum: 0
+            providers_ok:
+              type: integer
+              minimum: 0
+            providers_fail:
+              type: integer
+              minimum: 0
 
     SyncResultResponse:
       type: object
@@ -332,7 +327,7 @@ components:
 
     ErrorResponse:
       type: object
-      required: [error, code]
+      required: [error]
       properties:
         error:
           type: string

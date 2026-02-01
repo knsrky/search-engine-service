@@ -29,6 +29,7 @@ type ContentResponse struct {
 
 	// Timestamps
 	PublishedAt string `json:"published_at"`
+	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
 }
 
@@ -49,6 +50,7 @@ func FromDomainContent(c *domain.Content) ContentResponse {
 		Comments:    c.Comments,
 		Score:       c.Score,
 		PublishedAt: c.PublishedAt.Format(time.RFC3339),
+		CreatedAt:   c.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:   c.UpdatedAt.Format(time.RFC3339),
 	}
 }
