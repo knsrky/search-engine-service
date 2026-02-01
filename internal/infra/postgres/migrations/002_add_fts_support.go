@@ -98,12 +98,32 @@ func addFTSSupport() *gormigrate.Migration {
 				return err
 			}
 
+			// 6. Add stored computed column for cached log score
+			// This pre-computes LOG(score + 10) for efficient relevance ranking
+			if err := tx.Exec(`
+				ALTER TABLE contents
+				ADD COLUMN IF NOT EXISTS log_score_cached float8
+					GENERATED ALWAYS AS (LOG(COALESCE(score, 0) + 10)) STORED
+			`).Error; err != nil {
+				return err
+			}
+
+			// 7. Create B-tree index on the cached column for efficient sorting
+			if err := tx.Exec(`
+				CREATE INDEX IF NOT EXISTS idx_contents_score_cached
+				ON contents (log_score_cached DESC)
+			`).Error; err != nil {
+				return err
+			}
+
 			return nil
 		},
 		Rollback: func(tx *gorm.DB) error {
 			_ = tx.Exec(`DROP TRIGGER IF EXISTS trg_contents_search_vector ON contents`).Error
 			_ = tx.Exec(`DROP FUNCTION IF EXISTS contents_search_vector_update()`).Error
 			_ = tx.Exec(`DROP INDEX IF EXISTS idx_contents_search_vector`).Error
+			_ = tx.Exec(`DROP INDEX IF EXISTS idx_contents_score_cached`).Error
+			_ = tx.Exec(`ALTER TABLE contents DROP COLUMN IF EXISTS log_score_cached`).Error
 			_ = tx.Exec(`ALTER TABLE contents DROP COLUMN IF EXISTS search_vector`).Error
 
 			return nil

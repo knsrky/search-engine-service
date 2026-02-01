@@ -28,6 +28,11 @@ type ContentModel struct {
 	// Score
 	Score float64 `gorm:"type:decimal(10,2);default:0;index"`
 
+	// LogScoreCached is a stored computed column: LOG(score + 10)
+	// Used for efficient relevance ranking in full-text search.
+	// The "-" tag excludes this from INSERT/UPDATE - PostgreSQL computes it automatically.
+	LogScoreCached float64 `gorm:"type:float8;generated;stored;-"`
+
 	// Timestamps
 	PublishedAt time.Time `gorm:"not null;index"`
 	CreatedAt   time.Time `gorm:"autoCreateTime"`
