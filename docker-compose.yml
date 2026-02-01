@@ -58,7 +58,7 @@ services:
     build: .
     container_name: search-engine-api
     ports:
-      - "8088:8080"
+      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -82,7 +82,7 @@ services:
       APP_PROVIDER_A_ENDPOINT: /api/contents
       APP_PROVIDER_B_BASE_URL: http://mock_provider_b:8082
       APP_PROVIDER_B_ENDPOINT: /feed
-      APP_SYNC_INTERVAL: 1m
+      APP_SYNC_INTERVAL: 5m
 
 volumes:
   postgres_data:
