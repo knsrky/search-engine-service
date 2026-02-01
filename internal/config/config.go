@@ -207,7 +207,7 @@ func setDefaults(v *viper.Viper) {
 
 	// Logger defaults
 	v.SetDefault("logger.level", "info")
-	v.SetDefault("logger.format", "json")
+	v.SetDefault("logger.format", "console")
 	v.SetDefault("logger.output", "stdout")
 
 	// Sentry defaults
