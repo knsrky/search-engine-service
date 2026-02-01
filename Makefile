@@ -79,7 +79,6 @@ lint:
 ## fmt: Format code
 fmt:
 	$(GO) fmt ./...
-	goimports -w .
 
 ## vet: Run go vet
 vet:
@@ -166,7 +165,6 @@ deps-verify:
 ## tools: Install development tools
 tools:
 	$(GO) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
-	$(GO) install golang.org/x/tools/cmd/goimports@latest
 
 
 ## swagger: Serve swagger UI (requires api/openapi.yaml)
