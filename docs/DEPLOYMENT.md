@@ -31,10 +31,4 @@ The service is stateless and ready for horizontal scaling.
 - **Readiness** (`/readyz`): Checks DB/Redis connection. traffic off if fails.
 
 ## 📊 Observability
-
-- **Metrics**: Prometheus-compatible metrics exposed at `/metrics` (if enabled in router).
 - **Logs**: Structured JSON logging via **Zap**. Ideal for ELK/Loki.
-
-### Resource Limits (Recommended)
-- **CPU**: Request `100m`, Limit `500m`
-- **Memory**: Request `128Mi`, Limit `512Mi`
