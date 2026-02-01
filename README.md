@@ -175,9 +175,9 @@ Resty HTTP client with exponential backoff + jitter:
 
 When searching, results are sorted by a hybrid rank that combines text relevance with content score:
 
-$$
-FinalRank = \text{ts_rank}(Vector, Query) \times \log_{10}(\text{CalculatedScore} + 10)
-$$
+```
+FinalRank = ts_rank(Vector, Query) × log10(CalculatedScore + 10)
+```
 
 **Content Score** (pre-calculated during sync):
 
