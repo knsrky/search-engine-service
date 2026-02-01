@@ -6,9 +6,9 @@ import "search-engine-service/internal/domain"
 // SearchRequest represents the query parameters for searching contents.
 type SearchRequest struct {
 	Query     string `query:"q" validate:"max=200"`
-	Type      string `query:"type" validate:"omitempty,content_type"`
-	SortBy    string `query:"sort_by" validate:"omitempty,sort_field"`
-	SortOrder string `query:"sort_order" validate:"omitempty,sort_order"`
+	Type      string `query:"type" validate:"omitempty,oneof=video article"`
+	SortBy    string `query:"sort_by" validate:"omitempty,oneof=relevance score published_at"`
+	SortOrder string `query:"sort_order" validate:"omitempty,oneof=asc desc"`
 	Page      int    `query:"page" validate:"omitempty,min=1"`
 	PageSize  int    `query:"page_size" validate:"omitempty,min=1,max=100"`
 }

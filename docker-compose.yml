@@ -17,6 +17,18 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis for distributed locking
+  redis:
+    image: redis:8-alpine
+    container_name: search-engine-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   # Mock Provider A (JSON)
   mock_provider_a:
     build: ./mock/provider_a
@@ -46,9 +58,11 @@ services:
     build: .
     container_name: search-engine-api
     ports:
-      - "8080:8080"
+      - "8088:8080"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       mock_provider_a:
         condition: service_healthy
@@ -62,11 +76,13 @@ services:
       APP_DATABASE_NAME: search_engine
       APP_DATABASE_USER: app
       APP_DATABASE_PASSWORD: secret
+      APP_REDIS_HOST: redis
+      APP_REDIS_PORT: 6379
       APP_PROVIDER_A_BASE_URL: http://mock_provider_a:8081
       APP_PROVIDER_A_ENDPOINT: /api/contents
       APP_PROVIDER_B_BASE_URL: http://mock_provider_b:8082
       APP_PROVIDER_B_ENDPOINT: /feed
-      APP_SYNC_INTERVAL: 5m
+      APP_SYNC_INTERVAL: 1m
 
 volumes:
   postgres_data:

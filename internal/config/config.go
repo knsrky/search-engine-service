@@ -18,6 +18,7 @@ type Config struct {
 	Sync     SyncConfig     `mapstructure:"sync"`
 	Logger   LoggerConfig   `mapstructure:"logger"`
 	Sentry   SentryConfig   `mapstructure:"sentry"`
+	Redis    RedisConfig    `mapstructure:"redis"`
 }
 
 // AppConfig holds application-level settings.
@@ -100,6 +101,14 @@ type SentryConfig struct {
 	DSN         string  `mapstructure:"dsn"`
 	Environment string  `mapstructure:"environment"`
 	SampleRate  float64 `mapstructure:"sample_rate"`
+}
+
+// RedisConfig holds Redis connection settings for distributed locking.
+type RedisConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Password string `mapstructure:"password"`
+	DB       int    `mapstructure:"db"`
 }
 
 // Load reads configuration from file and environment variables.
@@ -201,6 +210,12 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("sentry.dsn", "")
 	v.SetDefault("sentry.environment", "development")
 	v.SetDefault("sentry.sample_rate", 1.0)
+
+	// Redis defaults
+	v.SetDefault("redis.host", "localhost")
+	v.SetDefault("redis.port", 6379)
+	v.SetDefault("redis.password", "")
+	v.SetDefault("redis.db", 0)
 }
 
 // IsDevelopment returns true if running in development mode.

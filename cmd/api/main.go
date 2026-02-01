@@ -3,11 +3,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"search-engine-service/internal/app/service"
@@ -22,6 +24,7 @@ import (
 	"search-engine-service/internal/logger"
 	httpserver "search-engine-service/internal/transport/http"
 	"search-engine-service/internal/validator"
+	"search-engine-service/pkg/locker"
 )
 
 func main() {
@@ -132,6 +135,27 @@ func main() {
 	searchSvc := service.NewSearchService(repo, log.Logger)
 	syncSvc := service.NewSyncService(repo, domainProviders, log.Logger)
 
+	// Connect to Redis
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+
+	// Ping Redis to verify connection
+	ctx := context.Background()
+	if err := redisClient.Ping(ctx).Err(); err != nil {
+		log.Fatal("failed to connect to Redis", zap.Error(err))
+	}
+	defer redisClient.Close()
+	log.Info("connected to Redis",
+		zap.String("host", cfg.Redis.Host),
+		zap.Int("port", cfg.Redis.Port),
+	)
+
+	// Create distributed locker
+	distLocker := locker.NewRedisLocker(redisClient, log.Logger)
+
 	// Create validator
 	v := validator.New()
 
@@ -150,7 +174,7 @@ func main() {
 		log.Logger,
 	)
 
-	// Start sync scheduler
+	// Start sync scheduler with distributed locking
 	scheduler := job.NewSyncScheduler(
 		syncSvc,
 		job.SyncConfig{
@@ -159,6 +183,8 @@ func main() {
 			OnStartup: cfg.Sync.OnStartup,
 		},
 		log.Logger,
+		distLocker,
+		nil, // cacheInvalidator will be added when caching is implemented
 	)
 	scheduler.Start(cfg.Sync.OnStartup)
 
